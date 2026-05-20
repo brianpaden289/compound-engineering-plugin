@@ -317,27 +317,33 @@ describe("cleanupStaleAgents", () => {
     expect(await exists(path.join(root, "learnings-researcher.md"))).toBe(false)
   })
 
-  test("removes .md files (Copilot format)", async () => {
+  test("removes .agent.md files (legacy Copilot extension)", async () => {
+    // Even though current CE agent source files are now `.md` (renamed for VS
+    // Code Copilot tool access in PR #846), `getLegacyCopilotArtifacts` still
+    // enumerates `<name>.agent.md` candidates so `cleanupCopilot` can sweep
+    // stale flat installs from the pre-rename era. Keep this fixture on
+    // `.agent.md` so a regression in that legacy extension path is caught
+    // here -- the preceding test already covers the `.md` shape.
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "cleanup-agents-copilot-"))
     await createFile(
-      path.join(root, "security-sentinel.md"),
+      path.join(root, "security-sentinel.agent.md"),
       agentContent(
         "security-sentinel",
         await pluginDescription("plugins/compound-engineering/agents/ce-security-sentinel.md"),
       ),
     )
     await createFile(
-      path.join(root, "performance-oracle.md"),
+      path.join(root, "performance-oracle.agent.md"),
       agentContent(
         "performance-oracle",
         await pluginDescription("plugins/compound-engineering/agents/ce-performance-oracle.md"),
       ),
     )
 
-    const removed = await cleanupStaleAgents(root, ".md")
+    const removed = await cleanupStaleAgents(root, ".agent.md")
 
     expect(removed).toBe(2)
-    expect(await exists(path.join(root, "security-sentinel.md"))).toBe(false)
+    expect(await exists(path.join(root, "security-sentinel.agent.md"))).toBe(false)
   })
 
   test("removes matching Kiro agent configs but preserves same-named user configs", async () => {
